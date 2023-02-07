@@ -1,13 +1,17 @@
-const http = require("http");
+const http = require('http');
 
 class Fakexpress {
   #middlewares = [];
 
   constructor() {
-    const instance = this.constructor.instance;
+    const { instance } = this.constructor;
     if (instance) return instance;
     this.#init();
     this.constructor.instance = this;
+  }
+
+  server() {
+    return this.httpServer;
   }
 
   #init() {
@@ -21,7 +25,20 @@ class Fakexpress {
     console.log(`Server listening on port ${port}...`);
   }
 
+  static async parseInput(req) {
+    const buffers = [];
+    for await (const chunk of req) {
+      buffers.push(chunk);
+    }
+    const json = Buffer.concat(buffers).toString();
+    if (!json || typeof json === 'undefined') return;
+    const data = JSON.parse(json);
+    req.body = { data };
+  }
+
   async #manage(req, res) {
+    await Fakexpress.parseInput(req);
+
     const nextLoop = async (middlewaresStack) => {
       if (middlewaresStack.length === 0) return;
       const next = () => {
@@ -29,13 +46,11 @@ class Fakexpress {
       };
 
       const middleware = middlewaresStack[0];
-      const isCurrentPath =
-        req.url.replace(middleware.path, "") === "" ||
-        typeof middleware.path === "undefined" ||
-        middleware.path === "*";
-      const isCurrentMethod =
-        middleware.method === req.method ||
-        typeof middleware.method === "undefined";
+      const isCurrentPath = req.url.replace(middleware.path, '') === ''
+        || typeof middleware.path === 'undefined'
+        || middleware.path === '*';
+      const isCurrentMethod = middleware.method === req.method
+        || typeof middleware.method === 'undefined';
 
       if (isCurrentPath && isCurrentMethod) {
         await middleware.callback(req, res, next);
@@ -58,7 +73,7 @@ class Fakexpress {
   get(path, callback) {
     this.#middlewares.push({
       path,
-      method: "GET",
+      method: 'GET',
       callback,
     });
   }
@@ -66,7 +81,7 @@ class Fakexpress {
   post(path, callback) {
     this.#middlewares.push({
       path,
-      method: "POST",
+      method: 'POST',
       callback,
     });
   }
@@ -74,7 +89,7 @@ class Fakexpress {
   delete(path, callback) {
     this.#middlewares.push({
       path,
-      method: "DELETE",
+      method: 'DELETE',
       callback,
     });
   }
@@ -82,7 +97,7 @@ class Fakexpress {
   put(path, callback) {
     this.#middlewares.push({
       path,
-      method: "PUT",
+      method: 'PUT',
       callback,
     });
   }
@@ -90,17 +105,18 @@ class Fakexpress {
   patch(path, callback) {
     this.#middlewares.push({
       path,
-      method: "PATCH",
+      method: 'PATCH',
       callback,
     });
   }
 
   static(path, callback) {
     this.#middlewares.push({
-      method: "GET",
-      callback : callback.bind(null, path)
+      method: 'GET',
+      callback: callback.bind(null, path),
     });
   }
 }
 
 module.exports = Fakexpress;
+

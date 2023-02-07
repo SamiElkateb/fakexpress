@@ -1,8 +1,7 @@
 # Fakexpress
 
-In PS8 were are not allowed to use the express framework, or any other.
+In our 8th semester project, we are not allowed to use the express framework, or any other.
 This can be used as a lightweight alternative to manage middlewares.
-
 
 ## Create a server
 ```javascript
@@ -25,7 +24,7 @@ fake.get("/api/endPoint", (req, res, next) => {
 });
 ```
 
-You can also use other verbs
+You can also use other method
 ```javascript
 fake.post("/api/endPoint", (req, res, next) => {
   res.end('Post hello world');
@@ -39,4 +38,23 @@ fake.delete("/api/endPoint", (req, res, next) => {
   res.end('Delete hello world');
 });
 ```
+
+### Access request body
+```javascript
+fake.post("/api/endPoint", (req, res, next) => {
+  const { data } = req.body;
+  console.log(data);
+  res.end('Data received');
+});
+```
+
+### Integration with socket.io
+```javascript
+const Fakexpress = require('fakexpress');
+const { Server } = require('socket.io');
+const fake = new Fakexpress();
+fake.listen(8000);
+const io = new Server(fake.server());
+```
+
 
