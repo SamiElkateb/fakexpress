@@ -31,9 +31,16 @@ class Fakexpress {
       buffers.push(chunk);
     }
     const json = Buffer.concat(buffers).toString();
-    if (!json || typeof json === 'undefined') return;
-    const data = JSON.parse(json);
-    req.body = { data };
+    if (!json || typeof json === 'undefined') {
+      req.body = { data: {} };
+      return;
+    }
+    try {
+      const data = JSON.parse(json);
+      req.body = { data };
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   async #manage(req, res) {
